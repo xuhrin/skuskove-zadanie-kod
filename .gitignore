@@ -1,3 +1,7 @@
+.vs
+out
+[Bb]uild*
+
 # Prerequisites
 *.d
 
