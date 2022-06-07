@@ -27,29 +27,41 @@ void Ball::Render() {
 }
 
 bool Ball::CheckCollision(const Paddle& paddle) {
-	if (paddle.DistanceFromBorderToPoint(mPosition) <= mRadius) {
-		const float dY = mPosition.y - paddle.GetPosition().y;
-		const float max = std::abs(paddle.GetScale().y * 0.5F);
-		const float dmY = std::fminf(std::abs(dY), max);
-
-		float angle = (M_PI * 0.25F) * (dmY / max);
-
-		if (mVelocity.x >= 0.F) {
-			angle = dY < 0.F ? M_PI + angle : M_PI - angle;
-		}
-		else if (dY < 0.F) {
-			angle = (2.F * M_PI) - angle;
-		}
-
-		mVelocity.x = std::cos(angle) * Ball::Velocity;
-		mVelocity.y = std::sin(angle) * Ball::Velocity;
-		return true;
+	const float hDiff = mPosition.x - paddle.GetPosition().x;
+	const float hDistance = std::abs(hDiff);
+	if (hDistance > (mRadius + paddle.GetScale().x * 0.5F)) {
+		return false;
 	}
-	return false;
+
+	const float vDiff = mPosition.y - paddle.GetPosition().y;
+	const float vDistance = std::abs(vDiff);
+	if (vDistance > (mRadius + paddle.GetScale().y * 0.5F)) {
+		return false;
+	}
+
+	const float vMax = std::abs(paddle.GetScale().y * 0.5F);
+	const float vClamped = std::fminf(vDistance, vMax);
+
+	float angle = (M_PI * 0.25F) * (vClamped / vMax);
+
+	if (hDiff < 0.F) {
+		angle = vDiff < 0.F ? M_PI + angle : M_PI - angle;
+	}
+	else if (vDiff < 0.F) {
+		angle = (2.F * M_PI) - angle;
+	}
+
+	mVelocity.x = std::cos(angle) * Ball::Velocity;
+	mVelocity.y = std::sin(angle) * Ball::Velocity;
+	return true;
 }
 
 bool Ball::CheckBorderCollision(float sizeY) {
-	if (std::abs(mPosition.y - sizeY) <= mRadius || std::abs(mPosition.y + sizeY) <= mRadius) {
+	if (mPosition.y + mRadius >= sizeY && mVelocity.y > 0.F) {
+		mVelocity.y = -mVelocity.y;
+		return true;
+	}
+	if (mPosition.y - mRadius <= -sizeY && mVelocity.y < 0.F) {
 		mVelocity.y = -mVelocity.y;
 		return true;
 	}
